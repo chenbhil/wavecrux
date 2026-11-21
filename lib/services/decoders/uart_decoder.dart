@@ -305,7 +305,11 @@ class UartDecoder implements ProtocolDecoder {
   static int _autoDetectBitPeriod(List<(int, String)> dataChanges) {
     if (dataChanges.length < 2) return 0;
     final gaps = <int>[];
-    for (var i = 1; i < dataChanges.length; i++) {
+    // The first entry is the line's initial value at the window start, not an
+    // edge: the gap from it to the first real transition is arbitrary (reset
+    // length, idle time) and poisons the GCD — 80 ns of reset against an
+    // 8680 ns bit time yields a 40 ns "bit period".
+    for (var i = 2; i < dataChanges.length; i++) {
       final gap = dataChanges[i].$1 - dataChanges[i - 1].$1;
       if (gap > 0) gaps.add(gap);
     }
